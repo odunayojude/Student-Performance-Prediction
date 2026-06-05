@@ -82,7 +82,7 @@ numeric_cols = df.select_dtypes(
 ).columns
 
 categorical_cols = df.select_dtypes(
-    include="object"
+    include=["object", "string"]
 ).columns
 
 for col in numeric_cols:
@@ -262,7 +262,7 @@ plt.show()
 df_corr = df.copy()
 
 for col in df_corr.select_dtypes(
-    include="object"
+    include=["object", "string"]
 ).columns:
     df_corr[col] = (
         df_corr[col]
@@ -307,6 +307,20 @@ X = pd.get_dummies(
 )
 
 y = df["Class"]
+
+# =========================
+# SAVE FEATURE INFORMATION
+# =========================
+
+feature_columns = X.columns.tolist()
+
+print("\n")
+print("=" * 60)
+print("FEATURE INFORMATION")
+print("=" * 60)
+
+print("Total Features:", len(feature_columns))
+print(feature_columns)
 
 print("\nFeature Matrix Shape:", X.shape)
 
@@ -523,6 +537,10 @@ plt.show()
 # SAVE TRAINED MODEL
 # =========================
 
+# =========================
+# SAVE TRAINED MODEL
+# =========================
+
 joblib.dump(
     rf_model,
     "models/random_forest.pkl"
@@ -538,6 +556,11 @@ joblib.dump(
     "models/label_encoder.pkl"
 )
 
+joblib.dump(
+    feature_columns,
+    "models/feature_columns.pkl"
+)
+
 print("\n")
 print("=" * 60)
 print("MODEL SAVED SUCCESSFULLY")
@@ -547,6 +570,7 @@ print("Saved Files:")
 print("- models/random_forest.pkl")
 print("- models/scaler.pkl")
 print("- models/label_encoder.pkl")
+print("- models/feature_columns.pkl")
 
 print("\nCharts saved inside outputs/ folder")
 print("Project completed successfully.")

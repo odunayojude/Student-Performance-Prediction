@@ -23,13 +23,10 @@ announcements = st.slider("Announcements View", 0, 100, 50)
 if st.button("Predict"):
 
     # =========================
-    # CREATE EMPTY DATAFRAME
+    # CREATE INPUT FRAME
     # =========================
     input_df = pd.DataFrame(np.zeros((1, len(feature_columns))), columns=feature_columns)
 
-    # =========================
-    # SET NUMERIC FEATURES
-    # =========================
     def set_if_exists(col, value):
         if col in input_df.columns:
             input_df[col] = value
@@ -40,18 +37,56 @@ if st.button("Predict"):
     set_if_exists("AnnouncementsView", announcements)
 
     # =========================
-    # SCALE INPUT (IMPORTANT!)
+    # SCALE INPUT
     # =========================
     input_scaled = scaler.transform(input_df)
 
     # =========================
-    # PREDICT
+    # PREDICT CLASS + PROBABILITY
     # =========================
     prediction = model.predict(input_scaled)[0]
+    probabilities = model.predict_proba(input_scaled)[0]
+
+    # Class labels (based on your training encoder)
+    class_labels = ["Low", "Medium", "High"]
+
+    predicted_label = class_labels[prediction]
+    confidence = np.max(probabilities)
 
     # =========================
-    # MAP OUTPUT LABELS (based on LabelEncoder)
+    # DISPLAY MAIN RESULT
     # =========================
-    label_map = {0: "Low", 1: "Medium", 2: "High"}
+    st.markdown("## 🎯 Prediction Result")
 
-    st.success(f"Prediction: {label_map.get(prediction, prediction)}")
+    if predicted_label == "High":
+        st.success(f"🟢 Performance: {predicted_label}")
+    elif predicted_label == "Medium":
+        st.warning(f"🟡 Performance: {predicted_label}")
+    else:
+        st.error(f"🔴 Performance: {predicted_label}")
+
+    st.write(f"**Confidence:** {confidence:.2f}")
+
+    # =========================
+    # PROBABILITY BREAKDOWN
+    # =========================
+    st.markdown("## 📊 Class Probabilities")
+
+    prob_df = pd.DataFrame({
+        "Performance Level": class_labels,
+        "Probability": probabilities
+    })
+
+    st.bar_chart(prob_df.set_index("Performance Level"))
+
+    # =========================
+    # INTERPRETATION MESSAGE
+    # =========================
+    st.markdown("## 🧠 Insight")
+
+    if predicted_label == "High":
+        st.info("This student is performing very well. Keep reinforcing current study habits.")
+    elif predicted_label == "Medium":
+        st.info("This student is doing okay but has room for improvement in engagement.")
+    else:
+        st.info("This student may need academic support and increased engagement strategies.")

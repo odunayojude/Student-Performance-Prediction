@@ -16,69 +16,52 @@ scaler = joblib.load("models/scaler.pkl")
 feature_columns = joblib.load("models/feature_columns.pkl")
 
 # =========================
-# FIXED SPLIT SCREEN CSS
+# CSS (SCROLL + RESPONSIVE)
 # =========================
 st.markdown(
     """
     <style>
+        .block-container {
+            padding-top: 1rem;
+        }
 
-    /* Remove default padding */
-    .block-container {
-        padding: 0rem 1rem;
-    }
+        .left-panel, .right-panel {
+            height: 85vh;
+            overflow-y: auto;
+            padding: 20px;
+            border-radius: 10px;
+            background-color: #0e1117;
+        }
 
-    /* Make columns full height */
-    section.main > div {
-        padding-top: 0rem;
-    }
-
-    /* LEFT PANEL */
-    div[data-testid="column"]:nth-child(1) {
-        position: fixed;
-        left: 0;
-        top: 0;
-        width: 45%;
-        height: 100vh;
-        background-color: #0e1117;
-        padding: 2rem;
-        overflow: hidden;
-        border-right: 1px solid #333;
-    }
-
-    /* RIGHT PANEL */
-    div[data-testid="column"]:nth-child(2) {
-        margin-left: 45%;
-        width: 55%;
-        padding: 2rem;
-        height: 100vh;
-        overflow: hidden;
-    }
-
+        .right-panel {
+            border-left: 1px solid #333;
+        }
     </style>
     """,
     unsafe_allow_html=True
 )
 
 # =========================
-# LAYOUT
+# LAYOUT (2 COLUMNS)
 # =========================
-col1, col2 = st.columns([1, 1.2])
+col1, col2 = st.columns([1, 1.2], gap="large")
 
 # =========================
-# LEFT PANEL - PREDICTOR (FIXED)
+# LEFT PANEL - INPUTS
 # =========================
 with col1:
-    st.markdown("## 📥 Predictor Panel")
+    st.markdown("## 📥 Predictor", unsafe_allow_html=True)
 
-    raisedhands = st.slider("Raised Hands", 0, 100, 50)
-    visited = st.slider("Visited Resources", 0, 100, 50)
-    discussion = st.slider("Discussion Activity", 0, 100, 50)
-    announcements = st.slider("Announcements View", 0, 100, 50)
+    with st.container():
+        raisedhands = st.slider("Raised Hands", 0, 100, 50)
+        visited = st.slider("Visited Resources", 0, 100, 50)
+        discussion = st.slider("Discussion Activity", 0, 100, 50)
+        announcements = st.slider("Announcements View", 0, 100, 50)
 
-    predict_btn = st.button("🚀 Predict")
+        predict_btn = st.button("🚀 Predict Performance")
 
 # =========================
-# RIGHT PANEL - OUTPUT (FIXED)
+# RIGHT PANEL - OUTPUT
 # =========================
 with col2:
     st.markdown("## 📊 Output Panel")
@@ -111,21 +94,21 @@ with col2:
         confidence = np.max(probabilities)
 
         # =========================
-        # RESULT
+        # RESULT DISPLAY
         # =========================
         if predicted_label == "High":
-            st.success("🟢 High Performance")
+            st.success(f"🟢 High Performance")
         elif predicted_label == "Medium":
-            st.warning("🟡 Medium Performance")
+            st.warning(f"🟡 Medium Performance")
         else:
-            st.error("🔴 Low Performance")
+            st.error(f"🔴 Low Performance")
 
-        st.metric("Confidence", f"{confidence:.2f}")
+        st.metric("Confidence Score", f"{confidence:.2f}")
 
         # =========================
-        # CHART
+        # PROBABILITY CHART
         # =========================
-        st.markdown("### 📈 Probabilities")
+        st.markdown("### 📈 Probability Distribution")
 
         prob_df = pd.DataFrame({
             "Class": labels,
@@ -140,11 +123,10 @@ with col2:
         st.markdown("### 🧠 Insight")
 
         if predicted_label == "High":
-            st.info("Strong student performance detected.")
+            st.info("Student shows strong engagement and consistent learning behavior.")
         elif predicted_label == "Medium":
-            st.info("Moderate performance. Encourage more engagement.")
+            st.info("Moderate performance. Encourage more participation.")
         else:
-            st.info("Low performance detected. Intervention needed.")
-
+            st.info("Low engagement detected. Intervention recommended.")
     else:
-        st.info("Enter values on the left and click Predict.")
+        st.info("👈 Enter values on the left and click Predict to see results.")

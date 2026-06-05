@@ -3,9 +3,10 @@ import joblib
 import pandas as pd
 import numpy as np
 
-st.set_page_config(layout="wide")  # ⭐ IMPORTANT: full screen layout
-
-st.title("🎓 Student Performance Prediction Dashboard")
+# =========================
+# PAGE CONFIG
+# =========================
+st.set_page_config(page_title="Student Predictor", layout="wide")
 
 # =========================
 # LOAD MODELS
@@ -15,29 +16,55 @@ scaler = joblib.load("models/scaler.pkl")
 feature_columns = joblib.load("models/feature_columns.pkl")
 
 # =========================
-# CREATE 2 COLUMNS
+# CSS (SCROLL + RESPONSIVE)
 # =========================
-col1, col2 = st.columns([1, 1.2])  # right side slightly bigger
+st.markdown(
+    """
+    <style>
+        .block-container {
+            padding-top: 1rem;
+        }
+
+        .left-panel, .right-panel {
+            height: 85vh;
+            overflow-y: auto;
+            padding: 20px;
+            border-radius: 10px;
+            background-color: #0e1117;
+        }
+
+        .right-panel {
+            border-left: 1px solid #333;
+        }
+    </style>
+    """,
+    unsafe_allow_html=True
+)
 
 # =========================
-# LEFT SIDE: INPUTS
+# LAYOUT (2 COLUMNS)
+# =========================
+col1, col2 = st.columns([1, 1.2], gap="large")
+
+# =========================
+# LEFT PANEL - INPUTS
 # =========================
 with col1:
-    st.markdown("## 📥 Student Inputs")
+    st.markdown("## 📥 Predictor", unsafe_allow_html=True)
 
-    raisedhands = st.slider("Raised Hands", 0, 100, 50)
-    visited = st.slider("Visited Resources", 0, 100, 50)
-    discussion = st.slider("Discussion Activity", 0, 100, 50)
-    announcements = st.slider("Announcements View", 0, 100, 50)
+    with st.container():
+        raisedhands = st.slider("Raised Hands", 0, 100, 50)
+        visited = st.slider("Visited Resources", 0, 100, 50)
+        discussion = st.slider("Discussion Activity", 0, 100, 50)
+        announcements = st.slider("Announcements View", 0, 100, 50)
 
-    predict_btn = st.button("🚀 Predict Performance")
+        predict_btn = st.button("🚀 Predict Performance")
 
 # =========================
-# RIGHT SIDE: OUTPUT
+# RIGHT PANEL - OUTPUT
 # =========================
 with col2:
-
-    st.markdown("## 📊 Prediction Result")
+    st.markdown("## 📊 Output Panel")
 
     if predict_btn:
 
@@ -70,18 +97,18 @@ with col2:
         # RESULT DISPLAY
         # =========================
         if predicted_label == "High":
-            st.success(f"🟢 {predicted_label} Performance")
+            st.success(f"🟢 High Performance")
         elif predicted_label == "Medium":
-            st.warning(f"🟡 {predicted_label} Performance")
+            st.warning(f"🟡 Medium Performance")
         else:
-            st.error(f"🔴 {predicted_label} Performance")
+            st.error(f"🔴 Low Performance")
 
         st.metric("Confidence Score", f"{confidence:.2f}")
 
         # =========================
-        # CHART
+        # PROBABILITY CHART
         # =========================
-        st.markdown("### 📈 Probability Breakdown")
+        st.markdown("### 📈 Probability Distribution")
 
         prob_df = pd.DataFrame({
             "Class": labels,
@@ -96,8 +123,10 @@ with col2:
         st.markdown("### 🧠 Insight")
 
         if predicted_label == "High":
-            st.info("Strong academic engagement detected.")
+            st.info("Student shows strong engagement and consistent learning behavior.")
         elif predicted_label == "Medium":
-            st.info("Moderate performance. Some improvement needed.")
+            st.info("Moderate performance. Encourage more participation.")
         else:
-            st.info("Low engagement detected. Student may need support.")
+            st.info("Low engagement detected. Intervention recommended.")
+    else:
+        st.info("👈 Enter values on the left and click Predict to see results.")

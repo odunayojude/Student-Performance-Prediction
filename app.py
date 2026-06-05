@@ -3,90 +3,101 @@ import joblib
 import pandas as pd
 import numpy as np
 
-st.title("Student Performance Prediction")
+st.set_page_config(layout="wide")  # ⭐ IMPORTANT: full screen layout
+
+st.title("🎓 Student Performance Prediction Dashboard")
 
 # =========================
-# LOAD ARTIFACTS
+# LOAD MODELS
 # =========================
 model = joblib.load("models/random_forest.pkl")
 scaler = joblib.load("models/scaler.pkl")
 feature_columns = joblib.load("models/feature_columns.pkl")
 
 # =========================
-# USER INPUTS (ONLY REAL FEATURES)
+# CREATE 2 COLUMNS
 # =========================
-raisedhands = st.slider("Raised Hands", 0, 100, 50)
-visited = st.slider("Visited Resources", 0, 100, 50)
-discussion = st.slider("Discussion Activity", 0, 100, 50)
-announcements = st.slider("Announcements View", 0, 100, 50)
+col1, col2 = st.columns([1, 1.2])  # right side slightly bigger
 
-if st.button("Predict"):
+# =========================
+# LEFT SIDE: INPUTS
+# =========================
+with col1:
+    st.markdown("## 📥 Student Inputs")
 
-    # =========================
-    # CREATE INPUT FRAME
-    # =========================
-    input_df = pd.DataFrame(np.zeros((1, len(feature_columns))), columns=feature_columns)
+    raisedhands = st.slider("Raised Hands", 0, 100, 50)
+    visited = st.slider("Visited Resources", 0, 100, 50)
+    discussion = st.slider("Discussion Activity", 0, 100, 50)
+    announcements = st.slider("Announcements View", 0, 100, 50)
 
-    def set_if_exists(col, value):
-        if col in input_df.columns:
-            input_df[col] = value
+    predict_btn = st.button("🚀 Predict Performance")
 
-    set_if_exists("raisedhands", raisedhands)
-    set_if_exists("VisITedResources", visited)
-    set_if_exists("Discussion", discussion)
-    set_if_exists("AnnouncementsView", announcements)
+# =========================
+# RIGHT SIDE: OUTPUT
+# =========================
+with col2:
 
-    # =========================
-    # SCALE INPUT
-    # =========================
-    input_scaled = scaler.transform(input_df)
+    st.markdown("## 📊 Prediction Result")
 
-    # =========================
-    # PREDICT CLASS + PROBABILITY
-    # =========================
-    prediction = model.predict(input_scaled)[0]
-    probabilities = model.predict_proba(input_scaled)[0]
+    if predict_btn:
 
-    # Class labels (based on your training encoder)
-    class_labels = ["Low", "Medium", "High"]
+        # =========================
+        # BUILD INPUT
+        # =========================
+        input_df = pd.DataFrame(np.zeros((1, len(feature_columns))), columns=feature_columns)
 
-    predicted_label = class_labels[prediction]
-    confidence = np.max(probabilities)
+        def set_if_exists(col, value):
+            if col in input_df.columns:
+                input_df[col] = value
 
-    # =========================
-    # DISPLAY MAIN RESULT
-    # =========================
-    st.markdown("## 🎯 Prediction Result")
+        set_if_exists("raisedhands", raisedhands)
+        set_if_exists("VisITedResources", visited)
+        set_if_exists("Discussion", discussion)
+        set_if_exists("AnnouncementsView", announcements)
 
-    if predicted_label == "High":
-        st.success(f"🟢 Performance: {predicted_label}")
-    elif predicted_label == "Medium":
-        st.warning(f"🟡 Performance: {predicted_label}")
-    else:
-        st.error(f"🔴 Performance: {predicted_label}")
+        # =========================
+        # SCALE + PREDICT
+        # =========================
+        input_scaled = scaler.transform(input_df)
+        prediction = model.predict(input_scaled)[0]
+        probabilities = model.predict_proba(input_scaled)[0]
 
-    st.write(f"**Confidence:** {confidence:.2f}")
+        labels = ["Low", "Medium", "High"]
+        predicted_label = labels[prediction]
+        confidence = np.max(probabilities)
 
-    # =========================
-    # PROBABILITY BREAKDOWN
-    # =========================
-    st.markdown("## 📊 Class Probabilities")
+        # =========================
+        # RESULT DISPLAY
+        # =========================
+        if predicted_label == "High":
+            st.success(f"🟢 {predicted_label} Performance")
+        elif predicted_label == "Medium":
+            st.warning(f"🟡 {predicted_label} Performance")
+        else:
+            st.error(f"🔴 {predicted_label} Performance")
 
-    prob_df = pd.DataFrame({
-        "Performance Level": class_labels,
-        "Probability": probabilities
-    })
+        st.metric("Confidence Score", f"{confidence:.2f}")
 
-    st.bar_chart(prob_df.set_index("Performance Level"))
+        # =========================
+        # CHART
+        # =========================
+        st.markdown("### 📈 Probability Breakdown")
 
-    # =========================
-    # INTERPRETATION MESSAGE
-    # =========================
-    st.markdown("## 🧠 Insight")
+        prob_df = pd.DataFrame({
+            "Class": labels,
+            "Probability": probabilities
+        })
 
-    if predicted_label == "High":
-        st.info("This student is performing very well. Keep reinforcing current study habits.")
-    elif predicted_label == "Medium":
-        st.info("This student is doing okay but has room for improvement in engagement.")
-    else:
-        st.info("This student may need academic support and increased engagement strategies.")
+        st.bar_chart(prob_df.set_index("Class"))
+
+        # =========================
+        # INSIGHT
+        # =========================
+        st.markdown("### 🧠 Insight")
+
+        if predicted_label == "High":
+            st.info("Strong academic engagement detected.")
+        elif predicted_label == "Medium":
+            st.info("Moderate performance. Some improvement needed.")
+        else:
+            st.info("Low engagement detected. Student may need support.")
